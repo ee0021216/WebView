@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<!-- Required meta tags -->
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+	<!-- Bootstrap CSS -->
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+	<link rel="stylesheet" href="css/all.min.css">
+	<style>
+    	.banner{
+    		height: 280px;
+    		background-position: center center;
+    		background-size: cover;
+    	}
+    	.bg-cover
+    	{
+    		background-position: center center;
+    		background-size: cover;
+    		background-repeat: no-repeat;
+    		height: 180px;
+    	}
+
+
+        @media screen and (max-width: 992px)
+        {
+            .text01
+            {
+                font-size: 56px;
+
+            }
+            .text02
+            {
+                font-size: 14px;
+
+            }
+            .banner{
+                height: 100px;
+                background-position: center center;
+                background-size: cover;
+            }
+            .m_list007{
+                height: 70vh;
+                overflow: scroll;
+            }
+        }
+   	</style>
+	<title>高雄遊玩趣</title>
+</head>
+<body>
+
+<div id="app" class="bg-dark">
+
+	<div class="banner pt-2 pl-3" style="background-image: url(image/biker-5.jpg);">
+		<div class="display-1 font-weight-bold text-white text01">{{newTitle}}</div>
+	</div>
+	<div class="container">
+		<!--                         <div v-for="(item,key) in regions" v-if="key<2">
+                                    {{item}}
+                                </div> -->
+		<div class="row mr-5" style="margin-top: -20px">
+			<div class="col-md-6 offset-3">
+				<select class="custom-select" v-model="currentRegion">
+					<option value="" selected>鼓山區</option>
+					<option v-for="(item,key) in regions" :value="item"  v-if="key>=1">{{item}}</option>
+				</select>
+			</div>
+
+		</div>
+		<div class="row m_list007">
+			<div class="col-md-6" v-for="(item,key) in filterData[currentPage]" v-if="key<10">
+				<div class="card h-100">
+					<div :style="{backgroundImage:'url('+item.Picture1+')'}" class="bg-cover"></div>
+					<div class="card-body text02">
+
+						<p><i class="fas fa-archway"></i></i>景點名稱:{{item.Name}}</p>
+						<p><i class="fab fa-500px"></i>營業時間:{{item.Opentime}}</p>
+						<p><i class="fas fa-anchor"></i>地址:{{item.Add}}</p>
+						<p><i class="fas fa-air-freshener"></i>電話:{{item.Tel}}</p>
+						<p v-if="item.Ticketinfo.length>1"><i class="fab fa-algolia"></i>票價資訊:{{item.Ticketinfo}}</p>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="row justify-content-center">
+			<nav aria-label="Page navigation example">
+				<ul class="pagination">
+					<li class="page-item" @click="currentPage--">
+						<a class="page-link" href="#" v-if="currentPage !=0"><i class="fas fa-arrow-alt-circle-left"></i></a>
+					</li>
+					<li class="page-item" :class="{'active' : currentPage === page-1}" v-for="page in filterData.length">
+						<a class="page-link" href="#" @click="currentPage= page-1">{{ page }}</a>
+					</li>
+					<li class="page-item" @click="currentPage++">
+						<a class="page-link" href="#" v-if="currentPage !=filterData.length-1 &&data.length>0"><i class="fas fa-arrow-alt-circle-right"></i></a>
+					</li>
+				</ul>
+			</nav>
+		</div>
+
+
+
+
+
+	</div>
+</div>
+
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+    	var app=new Vue({
+    		el:"#app",
+    		data:{
+    			newTitle:'高雄遊玩趣',
+    			data:[],//儲存所有景點的資料
+    			currentPage: 0 ,
+    			regions : [],
+    			currentRegion:'',
+    		},
+    		created(){
+    			const vm = this ;
+    			// const url='kcg.json';
+				const url='https://api.kcg.gov.tw/api/service/get/9c8e1450-e833-499c-8320-29b36b7ace5c';
+				axios.get(url)
+				  .then(function (response) {
+				    // handle success
+				    console.log(response.data.data.XML_Head.Infos.Info);
+				    vm.data = response.data.data.XML_Head.Infos.Info;
+				    vm.getRegion();
+				  })
+				  .catch(function (error) {
+				    // handle error
+				    console.log(error);
+				  })
+				  .then(function () {
+				    // always executed
+				  });
+    		},
+    		computed:{
+    			filterData:function(){
+    				const vm = this ;
+    				let items = [];
+					vm.currentPage=0;
+    				if(vm.currentRegion != ''){
+    					items= vm.data.filter(function(item ,i){
+    						return item.Add.substring(6,9)===vm.currentRegion;
+                            console.log(item.Add.substring(6,9));
+    					});
+
+    				}else{
+    					// items= vm.data;
+                        items= vm.data.filter(function(item ,i){
+                            return item.Add.substring(6,9)==="鼓山區";
+                            console.log(item.Add.substring(6,9));
+                        });
+    				}
+                    console.log(items);
+    				const newData= [] ;
+    				items.forEach(function(item , key){
+    					if(key % 10 ===0){
+    						newData.push([]);
+    					}
+    					const page = parseInt(key/10);
+    					newData[page].push(item);
+    				});
+    				console.log(newData);
+    				return newData;
+    			},
+    		},
+    		methods:{
+    			getRegion:function(){
+    				const vm = this;
+    				const regions = new Set(); //new set 獨一無二的特性不放重複的值
+    				vm.data.forEach(function(item,key){
+
+    					//新增資料是用 add
+    					regions.add(item.Add.substring(6,9));
+    				});
+    				vm.regions=regions;
+    				console.log(regions);
+
+    			}
+    		},
+    	});
+    </script>
+
+
+
+</body>
+</html>
